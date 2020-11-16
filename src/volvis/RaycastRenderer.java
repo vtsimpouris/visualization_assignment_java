@@ -203,7 +203,6 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         
         
         
-        // TODO abcd
         
         // Get the closest x, y, z to dx, dy, dz that are integers
         // This is important as our data is discrete (not continuous)

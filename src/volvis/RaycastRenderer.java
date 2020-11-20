@@ -202,26 +202,21 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         }
         
         
-        
-        
         // Get the closest x, y, z to dx, dy, dz that are integers
         // This is important as our data is discrete (not continuous)
         int x = (int) Math.floor(dx);
         int y = (int) Math.floor(dy);
         int z = (int) Math.floor(dz);
         
-        int step_x = 1;
-        int step_y = 1;
-        int step_z = 1;
         //trilinear
         //neighbors coordinates
-        int c000_x = x - step_x , c000_y = y - step_y , c000_z = z - step_z;
-        int c001_x = x - step_x , c001_y = y - step_y , c001_z = z + 1;
-        int c010_x = x - step_x , c010_y = y + 1 , c010_z = z - step_z;
-        int c011_x = x - step_x , c011_y = y + 1 , c011_z = z + 1;
-        int c100_x = x + 1 , c100_y = y - step_y , c100_z = z - step_z;
-        int c101_x = x + 1 , c101_y = y - step_y , c101_z = z + 1;
-        int c110_x = x + 1 , c110_y = y + 1 , c110_z = z - step_z;
+        int c000_x = x - 1 , c000_y = y - 1 , c000_z = z - 1;
+        int c001_x = x - 1 , c001_y = y - 1 , c001_z = z + 1;
+        int c010_x = x - 1 , c010_y = y + 1 , c010_z = z - 1;
+        int c011_x = x - 1 , c011_y = y + 1 , c011_z = z + 1;
+        int c100_x = x + 1 , c100_y = y - 1 , c100_z = z - 1;
+        int c101_x = x + 1 , c101_y = y - 1 , c101_z = z + 1;
+        int c110_x = x + 1 , c110_y = y + 1 , c110_z = z - 1;
         int c111_x = x + 1 , c111_y = y + 1 , c111_z = z + 1;
         
         //neighbors voxels
@@ -235,19 +230,19 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         short v111 = volume.getVoxel(c111_x,c111_y,c111_z);
         
         
-        //
-        double a_x = (dx - x + step_x) / (1+step_x) ;
-        double a_y = (dy - y + step_y) / (1+step_y) ;
-        double a_z = (dz - z + step_z) / (1+step_z) ;
+        // calculate slope of x,y and z axis
+        double a_x = (dx - x + 1) / 2 ;
+        double a_y = (dy - y + 1) / 2 ;
+        double a_z = (dz - z + 1) / 2 ;
         // x - axis interpolation
         double v_a = v010 + a_x * (v110 - v010);
         double v_b = v000 + a_x * (v100 - v000);
         double v_c = v011 + a_x * (v111 - v011);
         double v_d = v001 + a_x * (v101 - v001);
-        //y - axis interpolation
+        // y - axis interpolation
         double v_e = v_b + a_y * (v_a - v_b);
         double v_f = v_d + a_y * (v_c - v_d);
-        //z - axis interpolation
+        // z - axis interpolation
         double v_g = v_e + a_z * (v_f - v_e);
         
         // for debuging
@@ -297,7 +292,128 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
      */
     private VoxelGradient getGradientTrilinear(double[] coord) {
         // TODO 6: Implement Tri-linear interpolation for gradients
-        return ZERO_GRADIENT;
+            float dx = (float)coord[0], dy = (float)coord[1], dz = (float)coord[2];
+                     
+
+        // Verify they are inside the volume
+        if (dx < 0 || dx >= volume.getDimX() || dy < 0 || dy >= volume.getDimY()
+                || dz < 0 || dz >= volume.getDimZ()) {
+
+            // If not, jus return 0
+            return ZERO_GRADIENT;
+        }
+        
+        //if pixel at border use nearest neighbor  
+        if (dx < 1 || dx >= volume.getDimX()-1 || dy < 1 || dy >= volume.getDimY()-1
+                || dz < 1 || dz >= volume.getDimZ()-1) {
+            
+                int x = (int) Math.floor(dx);
+                int y = (int) Math.floor(dy);
+                int z = (int) Math.floor(dz);
+                // Finally, get the voxel from the Volume for the corresponding coordinates
+                return ZERO_GRADIENT;
+            
+        }
+        
+        
+        // Get the closest x, y, z to dx, dy, dz that are integers
+        // This is important as our data is discrete (not continuous)
+        int x = (int) Math.floor(dx);
+        int y = (int) Math.floor(dy);
+        int z = (int) Math.floor(dz);
+        
+        //trilinear
+        //neighbors coordinates
+        int c000_x = x - 1 , c000_y = y - 1 , c000_z = z - 1;
+        int c001_x = x - 1 , c001_y = y - 1 , c001_z = z + 1;
+        int c010_x = x - 1 , c010_y = y + 1 , c010_z = z - 1;
+        int c011_x = x - 1 , c011_y = y + 1 , c011_z = z + 1;
+        int c100_x = x + 1 , c100_y = y - 1 , c100_z = z - 1;
+        int c101_x = x + 1 , c101_y = y - 1 , c101_z = z + 1;
+        int c110_x = x + 1 , c110_y = y + 1 , c110_z = z - 1;
+        int c111_x = x + 1 , c111_y = y + 1 , c111_z = z + 1;
+        
+        //neighbors gradients
+        VoxelGradient g000 = gradients.getGradient(c000_x,c000_y,c000_z);
+        VoxelGradient g001 = gradients.getGradient(c001_x,c001_y,c001_z);
+        VoxelGradient g010 = gradients.getGradient(c010_x,c010_y,c010_z);
+        VoxelGradient g011 = gradients.getGradient(c011_x,c011_y,c011_z);
+        VoxelGradient g100 = gradients.getGradient(c100_x,c100_y,c100_z);
+        VoxelGradient g101 = gradients.getGradient(c101_x,c101_y,c101_z);
+        VoxelGradient g110 = gradients.getGradient(c110_x,c110_y,c110_z);
+        VoxelGradient g111 = gradients.getGradient(c111_x,c111_y,c111_z);
+        
+        //
+        VoxelGradient trilinear_grad = new VoxelGradient(); 
+        // calculate slope of x,y and z axis
+        float a_x = (dx - x + 1) / 2 ;
+        float a_y = (dy - y + 1) / 2 ;
+        float a_z = (dz - z + 1) / 2 ;
+        
+        // calculate trilinear values for each dimension of the gradient
+        // iteration needed to avoid extreme verbose code, 
+        // i = 0 corresponds to x dim, i = 1 corresponds to y dim, i = 2 i = 0 corresponds to z dim
+        float v000,v001,v010,v011,v100,v101,v110,v111;
+        v000 = v001 = v010 = v011 = v100 = v101 = v110 = v111 = 0;
+
+        for (int i=0; i<3; i++){
+            switch (i) {
+            case 0:
+                v000 = g000.x; v001 = g001.x; v010 = g010.x;
+                v011 = g011.x; v100 = g100.x; v101 = g101.x;
+                v110 = g110.x; v111 = g111.x;
+                break;
+            case 1:
+                v000 = g000.y; v001 = g001.y; v010 = g010.y;
+                v011 = g011.y; v100 = g100.y; v101 = g101.y;
+                v110 = g110.y; v111 = g111.y;
+                break;
+            case 2:
+                v000 = g000.z; v001 = g001.z; v010 = g010.z;
+                v011 = g011.z; v100 = g100.z; v101 = g101.z;
+                v110 = g110.z; v111 = g111.z;
+                break;
+            }
+            // x - axis interpolation
+            float v_a = v010 + a_x * (v110 - v010);
+            float v_b = v000 + a_x * (v100 - v000);
+            float v_c = v011 + a_x * (v111 - v011);
+            float v_d = v001 + a_x * (v101 - v001);
+            // y - axis interpolation
+            float v_e = v_b + a_y * (v_a - v_b);
+            float v_f = v_d + a_y * (v_c - v_d);
+            // z - axis interpolation
+            float v_g = v_e + a_z * (v_f - v_e);
+            
+            switch (i) {
+            case 0:
+                trilinear_grad.x = v_g;
+                break;
+            case 1:
+                trilinear_grad.y = v_g;
+                break;
+            case 2:
+                trilinear_grad.z = v_g;
+                break;
+            }
+        }
+        
+        // normalize trilinear gradient vector
+        trilinear_grad.mag = (float) Math.sqrt(trilinear_grad.x*trilinear_grad.x + 
+                trilinear_grad.y*trilinear_grad.y + 
+                trilinear_grad.z*trilinear_grad.z);
+        if(trilinear_grad.mag != 0){
+            trilinear_grad.x = trilinear_grad.x/trilinear_grad.mag;
+            trilinear_grad.y = trilinear_grad.y/trilinear_grad.mag;
+            trilinear_grad.z = trilinear_grad.z/trilinear_grad.mag;
+            trilinear_grad.mag = (float) Math.sqrt(trilinear_grad.x*trilinear_grad.x + 
+                trilinear_grad.y*trilinear_grad.y + 
+                trilinear_grad.z*trilinear_grad.z);
+        }
+        
+        
+        //return trilinear interpolation value
+        return trilinear_grad;
     }
 
     /**
@@ -344,6 +460,7 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
         TFColor pixelColor = new TFColor();
         // Auxiliar color
         TFColor colorAux;
+       
 
         for (int j = imageCenter[1] - imageH / 2; j < imageCenter[1] + imageH / 2; j++) {
             for (int i = imageCenter[0] - imageW / 2; i < imageCenter[0] + imageW / 2; i++) {
@@ -353,6 +470,9 @@ public class RaycastRenderer extends Renderer implements TFChangeListener {
                 //int val = getVoxel(pixelCoord);
                 //NOTE: you have to implement this function to get the tri-linear interpolation
                 int val = getVoxelTrilinear(pixelCoord);
+
+                //for debugging
+                VoxelGradient vg = getGradientTrilinear(pixelCoord);
 
                 // Map the intensity to a grey value by linear scaling
                 pixelColor.r = val / max;

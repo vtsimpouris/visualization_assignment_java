@@ -56,9 +56,37 @@ public class GradientVolume {
         // TODO 4: Implement gradient computation.
         // this just initializes all gradients to the vector (0,0,0)
         for (int i = 0; i < data.length; i++) {
-            data[i] = zero;
-        }
+            // basis conversion of 1D to 3D indexing
+            int z = i/(dimX*dimY);
+            int temp = i - (z*dimX*dimY);
+            int y = temp/dimX;
+            int x = temp % dimX;
+            
+            // gradient vector computed according to equation from slide 27 at 2-spatial.pdf
+            // gradient = 0 at borders
+            if (x < 1 || x > (dimX - 2) || y < 1 || y > (dimY - 2)
+                || z < 1 || z > (dimZ - 2)) {
+                
+                data[i] = zero;
+            }
+            else{
+                VoxelGradient G = new VoxelGradient((float) 1/2 * (volume.getVoxel(x+1,y,z) - volume.getVoxel(x-1,y,z)),
+                (float) 1/2 * (volume.getVoxel(x+1,y,z) - volume.getVoxel(x-1,y,z)),
+                (float) 1/2 * (volume.getVoxel(x,y,z+1) - volume.getVoxel(x,y,z-1)));
+                
+                //normalize gradient vector
+                G.x = G.x/G.mag;
+                G.y = G.y/G.mag;
+                G.z = G.z/G.mag;
+                G.mag = 1;
+                data[i] = G;
 
+            }
+
+
+        }
+     
+        
     }
 
     public double getMaxGradientMagnitude() {
